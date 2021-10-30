@@ -68,9 +68,13 @@ def sp_data_pull():
 
 #date = datetime.datetime.now()
 
-data = sp_data_pull()
+data_to_csv = sp_data_pull()
 
-data.to_csv(stored_data, mode = 'a', index = True, header = True) #write the data from today to CSV
+data_to_csv.to_csv(stored_data, mode = 'a', index = True, header = True) #write the data from today to CSV
 
 #Next Step is to write a function that will check the high point of the tickers in data compared to the open to see how much they rise. 
+#Need to add a column (1st column ) in csv for date to make analysis easier
 #Make sure to check line 57 above during the week
+
+
+
