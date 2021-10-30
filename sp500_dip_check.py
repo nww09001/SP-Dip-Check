@@ -62,19 +62,31 @@ def sp_data_pull():
   
     #Top_drop ###Uncomment if you want to see top drop table without filtering
 
-    Top_tickers = Top_drop[Top_drop.iloc[:,0] < -3.00] # only keep values that dropped by greater than 3 percent
-    return Top_tickers
+    Top_tickers_data = Top_drop[Top_drop.iloc[:,0] < -3.00] # only keep values that dropped by greater than 3 percent
+    Top_TCKRS = Top_tickers_data.index.values.tolist() #Get a list of the tickers in the drop data
+    return Top_tickers_data, Top_TCKRS
+    
 
 
 #date = datetime.datetime.now()
 
 data_to_csv = sp_data_pull()
+drop_data_to_csv = data_to_csv[0]
+drop_tickers = data_to_csv[1]
 
-data_to_csv.to_csv(stored_data, mode = 'a', index = True, header = True) #write the data from today to CSV
+drop_data_to_csv.to_csv(stored_data, mode = 'a', index = True, header = True) #write the data from today to CSV
 
 #Next Step is to write a function that will check the high point of the tickers in data compared to the open to see how much they rise. 
-#Need to add a column (1st column ) in csv for date to make analysis easier
+#Need to add a column (1st column ) in csv for date to make analysis easier - Maybe
 #Make sure to check line 57 above during the week
 
+
+#New Changes (10/30/21)
+def next_day_rise(tickers):
+    #The intent of this function is to pull the tickers from the SP_data_pull function and determine the max percent they rose the next day (max - open, 1day)
+    #Right now it succesfully pulls tickers from SP_Data_pull()
+    print(tickers) #This line is just a test to show it is pulling the right tickers from SP_data_pull()
+
+next_day_rise(drop_tickers)
 
 
