@@ -81,12 +81,26 @@ drop_data_to_csv.to_csv(stored_data, mode = 'a', index = True, header = True) #w
 #Make sure to check line 57 above during the week
 
 
-#New Changes (10/30/21)
+#New Changes (11/6/21)
 def next_day_rise(tickers):
+    today = date.today() #ensure we have todays date
     #The intent of this function is to pull the tickers from the SP_data_pull function and determine the max percent they rose the next day (max - open, 1day)
-    #Right now it succesfully pulls tickers from SP_Data_pull()
-    print(tickers) #This line is just a test to show it is pulling the right tickers from SP_data_pull()
+
+    # print(tickers) #This line is just a test to show it is pulling the right tickers from SP_data_pull()
+    next_day_data = yf.download(tickers, today, rounding = 2)
+    next_day_open = next_day_data['Open'] #Pull the open from next day data
+    next_day_high = next_day_data['High'] #pull the high point in the next day data
+    next_day_max_rise = ((next_day_high-next_day_open)/next_day_open)*100 # finds the percent the dropped stocks rose the next day. 
+
+    next_day_df = pd.DataFrame(next_day_max_rise) #convert to Data frame
+    next_day_df = next_day_df.transpose() #transpose to match drop data
+
+    next_day_df.to_csv(stored_data, mode = 'a', index = True, header = True) #store the next day drop in the csv file
 
 next_day_rise(drop_tickers)
 
+
+#Notes for next time: All functions are working, but need to check this during the week. Right now it is pulling next day data and drop data from the same day. 
+# In actuallity, we would wait 24 hours before runnig next_day_rise so it should pull the right day
+#Next steps:    Need to better orgnaize data when pulled. RIght now it is dropping data all in one column, very messy. 
 
