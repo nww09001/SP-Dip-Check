@@ -17,8 +17,9 @@ from datetime import date
 from datetime import timedelta
 
 
-#csv file location: 
-stored_data = '\\Users\\noahw\\Python-Finance\\S&P-Dip-Data.csv'
+#csv file locations: Change these based on the locations of your machine. 
+stored_data_drop = '\\Users\\noahw\\Python-Finance\\S&P-Dip-Data.csv'
+stored_data_next_day = '\\Users\\noahw\\Python-Finance\\S&P-Dip-Data_next_day.csv'
 
 today = date.today() #Get todays Date
 yesterday = today - timedelta(days = 1) #Get yesterdays date
@@ -57,13 +58,15 @@ def sp_data_pull():
     #df = df.drop(df.columns[0], axis = 1) # The first column will be NaN since, drop it, need to check during week, over weekend this was not needed and broke it
 
     #sort table by percent drop
-    Top_drop = df.sort_values(df.columns[0])
+    Top_drop = df #changing the name of the dataframe
+    # Top_drop = df.sort_values(df.columns[0]) # Uncomment this if you want to order the values by most dropped
     #rename column to percent
   
     #Top_drop ###Uncomment if you want to see top drop table without filtering
 
     Top_tickers_data = Top_drop[Top_drop.iloc[:,0] < -3.00] # only keep values that dropped by greater than 3 percent
     Top_TCKRS = Top_tickers_data.index.values.tolist() #Get a list of the tickers in the drop data
+    Top_tickers_data.insert(loc=0, column='Date', value=today)   #add the date to the first column of the table for use when analyzing data
     return Top_tickers_data, Top_TCKRS
     
 
@@ -74,7 +77,7 @@ data_to_csv = sp_data_pull()
 drop_data_to_csv = data_to_csv[0]
 drop_tickers = data_to_csv[1]
 
-drop_data_to_csv.to_csv(stored_data, mode = 'a', index = True, header = True) #write the data from today to CSV
+drop_data_to_csv.to_csv(stored_data_drop, mode = 'a', index = True, header = True) #write the data from today to CSV
 
 #Next Step is to write a function that will check the high point of the tickers in data compared to the open to see how much they rise. 
 #Need to add a column (1st column ) in csv for date to make analysis easier - Maybe
@@ -94,13 +97,15 @@ def next_day_rise(tickers):
 
     next_day_df = pd.DataFrame(next_day_max_rise) #convert to Data frame
     next_day_df = next_day_df.transpose() #transpose to match drop data
+    next_day_df.insert(loc=0, column='Date', value = today) #add the date to the first column of the table for use when analyzing data
 
-    next_day_df.to_csv(stored_data, mode = 'a', index = True, header = True) #store the next day drop in the csv file
+
+    next_day_df.to_csv(stored_data_next_day, mode = 'a', index = True, header = True) #store the next day drop in the csv file
 
 next_day_rise(drop_tickers)
 
 
-#Notes for next time: All functions are working, but need to check this during the week. Right now it is pulling next day data and drop data from the same day. 
-# In actuallity, we would wait 24 hours before runnig next_day_rise so it should pull the right day
-#Next steps:    Need to better orgnaize data when pulled. RIght now it is dropping data all in one column, very messy. 
+#Both data outputs now add a date column as the first column for data organization. 
+# Data is in alphabetical order by ticker, both drop data and next day data should be in same order
+# Code now stores drop data and next day rise data in seperate CSV files, will combine for analysis
 
