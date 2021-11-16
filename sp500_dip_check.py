@@ -1,11 +1,21 @@
+#The  hypothesis is that stocks that drop hard one day will rebond a certain amount the next day
+#If we can find how much they rebound vs how much they dropped perhaps we can buy stocks thay dropped and sell
+#them when they reach their predicted high point the next day
 
+#This code is intended to be run once a day once the stock market closes. The intent of the function is to 
+#look up the tickers in the S&P 500 and find once the dropped greater than a certain percentage (3% to start)
+#The function stores tickers that droped greater than 3% and then the next day, it sees how much those tickers 
+#rose from open, (High - Open). It stores the data for how much the stocks dropped and then how much they rose 
+#in seperate csv files.
+#This will be run on a machine to collect data, once enough data is collected, a regression will be analyzed to see
+#if there is a trend for how much a stocl dropped vs how much it can rise the next day
 
+### Installs, uncoment if needed
 #pip install yfinance
-
 #pip install yahoofinancials
-
 #pip install requests beautifulsoup4
 
+### mports
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -15,14 +25,17 @@ import requests
 from csv import writer
 from datetime import date
 from datetime import timedelta
+import time 
 
-
+###define some variables
 #csv file locations: Change these based on the locations of your machine. 
 stored_data_drop = '\\Users\\noahw\\Python-Finance\\S&P-Dip-Data.csv'
 stored_data_next_day = '\\Users\\noahw\\Python-Finance\\S&P-Dip-Data_next_day.csv'
 
 today = date.today() #Get todays Date
 yesterday = today - timedelta(days = 1) #Get yesterdays date
+
+### Functions, there are 2 main functions defined here. SP_data_pull() and next_day_rise()
 
 #SP_data_pull() is used Extract all tickers from wiki list of S&P 500 tickers
 #With the ticker table it then pulls the daily data from yfinance
@@ -55,14 +68,10 @@ def sp_data_pull():
     #Transpose data to make it easier to work with
     df = pd.DataFrame(percent_dif)  #turn it into a dataframe
     df = df.transpose() # transpose the data
-    #df = df.drop(df.columns[0], axis = 1) # The first column will be NaN since, drop it, need to check during week, over weekend this was not needed and broke it
 
     #sort table by percent drop
     Top_drop = df #changing the name of the dataframe
     # Top_drop = df.sort_values(df.columns[0]) # Uncomment this if you want to order the values by most dropped
-    #rename column to percent
-  
-    #Top_drop ###Uncomment if you want to see top drop table without filtering
 
     Top_tickers_data = Top_drop[Top_drop.iloc[:,0] < -3.00] # only keep values that dropped by greater than 3 percent
     Top_TCKRS = Top_tickers_data.index.values.tolist() #Get a list of the tickers in the drop data
@@ -70,21 +79,8 @@ def sp_data_pull():
     return Top_tickers_data, Top_TCKRS
     
 
-
-#date = datetime.datetime.now()
-
-data_to_csv = sp_data_pull()
-drop_data_to_csv = data_to_csv[0]
-drop_tickers = data_to_csv[1]
-
-drop_data_to_csv.to_csv(stored_data_drop, mode = 'a', index = True, header = True) #write the data from today to CSV
-
-#Next Step is to write a function that will check the high point of the tickers in data compared to the open to see how much they rise. 
-#Need to add a column (1st column ) in csv for date to make analysis easier - Maybe
-#Make sure to check line 57 above during the week
-
-
-#New Changes (11/6/21)
+# The next_day_rise() function takes the tickers from the drop data and checks how much they rose the next day
+#This data will be used to show how stocks that dropped hard one day may rise the next day
 def next_day_rise(tickers):
     today = date.today() #ensure we have todays date
     #The intent of this function is to pull the tickers from the SP_data_pull function and determine the max percent they rose the next day (max - open, 1day)
@@ -102,10 +98,18 @@ def next_day_rise(tickers):
 
     next_day_df.to_csv(stored_data_next_day, mode = 'a', index = True, header = True) #store the next day drop in the csv file
 
-next_day_rise(drop_tickers)
+#Now that everything is defined, this section calls the functions 
+
+data_to_csv = sp_data_pull() 
+drop_data_to_csv = data_to_csv[0] #returns the drop data to go to the csv file
+drop_tickers = data_to_csv[1] #returns the tickers from the drop data
+
+drop_data_to_csv.to_csv(stored_data_drop, mode = 'a', index = True, header = True) #write the data from today to CSV
+
+next_day_rise(drop_tickers) #use the tickers from the drop data in the next_day_rise() function
 
 
 #Both data outputs now add a date column as the first column for data organization. 
 # Data is in alphabetical order by ticker, both drop data and next day data should be in same order
 # Code now stores drop data and next day rise data in seperate CSV files, will combine for analysis
-
+#once ready for use, add a while loop to call the functions and add a sleep() call to run this once a day. 
