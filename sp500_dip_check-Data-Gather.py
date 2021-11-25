@@ -32,9 +32,6 @@ import time
 stored_data_drop = '\\Users\\noahw\\Python-Finance\\S&P-Dip-Data.csv'
 stored_data_next_day = '\\Users\\noahw\\Python-Finance\\S&P-Dip-Data_next_day.csv'
 
-today = date.today() #Get todays Date
-yesterday = today - timedelta(days = 1) #Get yesterdays date
-
 ### Functions, there are 2 main functions defined here. SP_data_pull() and next_day_rise()
 
 #SP_data_pull() is used Extract all tickers from wiki list of S&P 500 tickers
@@ -99,25 +96,13 @@ def next_day_rise(tickers, date):     #added date inputs
     next_day_df.to_csv(stored_data_next_day, mode = 'a', index = True, header = True) #store the next day drop in the csv file
 
 #Now that everything is defined, this section calls the functions 
-
-data_to_csv = sp_data_pull(today) 
-drop_data_to_csv = data_to_csv[0] #returns the drop data to go to the csv file
-drop_tickers = data_to_csv[1] #returns the tickers from the drop data
-
-drop_data_to_csv.to_csv(stored_data_drop, mode = 'a', index = True, header = True) #write the data from today to CSV
-
-next_day_rise(drop_tickers, today) #use the tickers from the drop data in the next_day_rise() function
-
-
-#Both data outputs now add a date column as the first column for data organization. 
-# Data is in alphabetical order by ticker, both drop data and next day data should be in same order
-# Code now stores drop data and next day rise data in seperate CSV files, will combine for analysis
-#once ready for use, add a while loop to call the functions and add a sleep() call to run this once a day. 
+ 
 
 #The below function is used to run the SP_data_pull() and next_day_rise() with changing dates to gather data
 start_date = "2021-06-08"
 day_count = 1
 data_day = start_date
+total_days = 3
 
 def data_gather():
     #Start with a day, (6 months ago) make this start day a tuesday, this day vairable will be incrimented to add a day 
@@ -125,7 +110,16 @@ def data_gather():
     #Add a check, if one of the days is a weekend, add 2 days to avoid weekends. 
     #Every day, run the SP_Data_pull, increase the day by one, run next_day_rise(), run SP_data_pull() again. 
 
-    data_to_csv = sp_data_pull(data_day) 
-    drop_data_to_csv = data_to_csv[0] #returns the drop data to go to the csv file
-    drop_tickers = data_to_csv[1]
+    pull_to_csv = sp_data_pull(data_day) 
+    drop_data_to_csv = pull_to_csv[0] #returns the drop data to go to the csv file
+    drop_data_to_csv.to_csv(stored_data_drop, mode = 'a', index = True, header = True) #write to the csv file
+    
+    drop_tickers = pull_to_csv[1]
     #incriment day 1 then run next_day_rise()
+    next_day = data_day + timedelta(days = 1)
+
+    next_day_rise(drop_tickers, next_day)
+    
+while day_count < total_days:
+    data_gather()
+    day_count += 1
