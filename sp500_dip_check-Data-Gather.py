@@ -26,6 +26,7 @@ from csv import writer
 from datetime import date
 from datetime import timedelta
 import time 
+import datetime
 
 ###define some variables
 #csv file locations: Change these based on the locations of your machine. 
@@ -55,8 +56,9 @@ def sp_data_pull(date):     #Added date inputs
         data = data.replace('\n','')
         ticker_table.append(data)
 
+    end_date = date + timedelta(days = 1) #Add end date variable to be used in yf.download
     #pull data from yfinance
-    daily_data = yf.download(ticker_table, date, rounding=2)
+    daily_data = yf.download(ticker_table, start = date, end = end_date, rounding=2)
 
     Open = daily_data['Open']
     Close = daily_data['Close']
@@ -81,9 +83,9 @@ def sp_data_pull(date):     #Added date inputs
 def next_day_rise(tickers, date):     #added date inputs
     day = date #ensure we have todays date
     #The intent of this function is to pull the tickers from the SP_data_pull function and determine the max percent they rose the next day (max - open, 1day)
+    end_day = day + timedelta(days = 1) #add end date variable or else it pulls all days
 
-    # print(tickers) #This line is just a test to show it is pulling the right tickers from SP_data_pull()
-    next_day_data = yf.download(tickers, day, rounding = 2)
+    next_day_data = yf.download(tickers, start = day, end = end_day, rounding = 2)
     next_day_open = next_day_data['Open'] #Pull the open from next day data
     next_day_high = next_day_data['High'] #pull the high point in the next day data
     next_day_max_rise = ((next_day_high-next_day_open)/next_day_open)*100 # finds the percent the dropped stocks rose the next day. 
@@ -95,31 +97,33 @@ def next_day_rise(tickers, date):     #added date inputs
 
     next_day_df.to_csv(stored_data_next_day, mode = 'a', index = True, header = True) #store the next day drop in the csv file
 
-#Now that everything is defined, this section calls the functions 
- 
-
-#The below function is used to run the SP_data_pull() and next_day_rise() with changing dates to gather data
-start_date = "2021-06-08"
+#The below section is used to run the SP_data_pull() and next_day_rise() with changing dates to gather data
+start_date = datetime.datetime(2021, 6, 8)
 day_count = 1
-data_day = start_date
-total_days = 3
+total_days = 3  #Number of days from start to pull data for
 
-def data_gather():
+def data_gather(gather_day):
     #Start with a day, (6 months ago) make this start day a tuesday, this day vairable will be incrimented to add a day 
     #each time the code is run
     #Add a check, if one of the days is a weekend, add 2 days to avoid weekends. 
     #Every day, run the SP_Data_pull, increase the day by one, run next_day_rise(), run SP_data_pull() again. 
-
+    data_day = gather_day
     pull_to_csv = sp_data_pull(data_day) 
     drop_data_to_csv = pull_to_csv[0] #returns the drop data to go to the csv file
     drop_data_to_csv.to_csv(stored_data_drop, mode = 'a', index = True, header = True) #write to the csv file
     
     drop_tickers = pull_to_csv[1]
     #incriment day 1 then run next_day_rise()
-    next_day = data_day + timedelta(days = 1)
-
+    next_day = gather_day + timedelta(days = 1)
+    
     next_day_rise(drop_tickers, next_day)
+   
+    ###After fixing, add lines to skip weekened
+    
     
 while day_count < total_days:
-    data_gather()
-    day_count += 1
+    data_gather(start_date)
+    start_date = start_date + timedelta(days = 1) #incriment the day 
+    day_count += 1 #incirment the day count, just used to while loop
+    ###Next Steps, add lines to skip the weekend
+    ### Optional, instead of 2 CSV files, combine into one data frame before adding to CSV, requires function rewrites
