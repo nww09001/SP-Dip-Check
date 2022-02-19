@@ -98,9 +98,9 @@ def next_day_rise(tickers, date):     #added date inputs
     next_day_df.to_csv(stored_data_next_day, mode = 'a', index = True, header = True) #store the next day drop in the csv file
 
 #The below section is used to run the SP_data_pull() and next_day_rise() with changing dates to gather data
-start_date = datetime.datetime(2021, 6, 8)
+start_date = datetime.datetime(2021, 8, 4)
 day_count = 1
-total_days = 3  #Number of days from start to pull data for
+total_days = 14  #Number of days from start to pull data for
 
 def data_gather(gather_day):
     #Start with a day, (6 months ago) make this start day a tuesday, this day vairable will be incrimented to add a day 
@@ -117,13 +117,14 @@ def data_gather(gather_day):
     next_day = gather_day + timedelta(days = 1)
     
     next_day_rise(drop_tickers, next_day)
-   
-    ###After fixing, add lines to skip weekened
     
     
 while day_count < total_days:
-    data_gather(start_date)
+    dayno = datetime.datetime.weekday(start_date) #Checks to see what day of the week it is 0-6, use to skip weekends
+
+    if dayno < 4:   #If day of week is Monday, Tuesday, Wednesday, Thursday  gather data, else skip and incriment day 
+        data_gather(start_date)
+    
     start_date = start_date + timedelta(days = 1) #incriment the day 
     day_count += 1 #incirment the day count, just used to while loop
-    ###Next Steps, add lines to skip the weekend
     ### Optional, instead of 2 CSV files, combine into one data frame before adding to CSV, requires function rewrites
